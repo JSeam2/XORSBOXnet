@@ -69,10 +69,6 @@ static int safeLongToInt(long toConvert) {
  * https://docs.python.org/3/c-api/tuple.html
  */
 static PyObject *evaluateWrapper(PyObject *self, PyObject *args) {
-	int *input;
-	int *keys[] = malloc;
-	std::map<int, int> &sbox;
-	
 	// Get size of PyObject* args
 	Py_ssize_t tupleSize = PyTuple_Size(args);
 
@@ -103,8 +99,10 @@ static PyObject *evaluateWrapper(PyObject *self, PyObject *args) {
 		return NULL;
 	}
 
+	PyObject *next;
+
 	// Extact first element: int input
-	PyObject *next = PyIter_Next(iter);
+	next = PyIter_Next(iter);
 
 	// Build the resulting int into a Python object
 	// NOTE: All integers are implemented as "long"
@@ -128,16 +126,8 @@ static PyObject *evaluateWrapper(PyObject *self, PyObject *args) {
 	/*****************************
 	 * 2. Get int[] keys out     *
 	 *****************************/
-
-	// Treat obj as an iterator
-	PyObject *iter = PyObject_GetIter(obj);
-	if(!iter){
-		// ERROR object is not an iterator
-		return NULL;
-	}
-
 	// Extact first element: int input
-	PyObject *next = PyIter_Next(iter);
+	next = PyIter_Next(iter);
 
 	if(!PyList_Check(next)) {
 		// We didn't get a list
@@ -149,7 +139,7 @@ static PyObject *evaluateWrapper(PyObject *self, PyObject *args) {
 	Py_ssize_t listSize = PyList_Size(next);
 
 	// malloc array to collect values from python list
-	int *keys = malloc(listSize * sizeof(unsigned int)); 
+	int *keys = (int*)malloc(listSize * sizeof(unsigned int)); 
 
 	// Check for Argument errors
 	if(!listSize) {
@@ -167,7 +157,7 @@ static PyObject *evaluateWrapper(PyObject *self, PyObject *args) {
 		long longKey = PyLong_AsLong(tempPointer);
 		int intKey = safeLongToInt(longInput);
 
-		if(intInput == NULL) {
+		if(intKey == NULL) {
 			// ERROR
 			return NULL;
 		}
@@ -179,16 +169,8 @@ static PyObject *evaluateWrapper(PyObject *self, PyObject *args) {
 	/*****************************
 	 * 3. Get map sbox   out     *
 	 *****************************/
-
-	// Treat obj as an iterator
-	PyObject *iter = PyObject_GetIter(obj);
-	if(!iter){
-		// ERROR object is not an iterator
-		return NULL;
-	}
-
 	// Extact first element: int input
-	PyObject *next = PyIter_Next(iter);
+	next = PyIter_Next(iter);
 
 	if(!PyDict_Check(next)) {
 		// We didn't get a list
@@ -198,7 +180,7 @@ static PyObject *evaluateWrapper(PyObject *self, PyObject *args) {
 
 	// malloc space for sbox array
 	Py_ssize_t dictSize = PyDict_Size(next);
-	int *sbox = malloc(dictSize * sizeof(unsigned int));
+	int *sbox = (int*) malloc(dictSize * sizeof(unsigned int));
 
 	// iterate through dictionary
 	int i = 0;
@@ -207,9 +189,6 @@ static PyObject *evaluateWrapper(PyObject *self, PyObject *args) {
 	while(PyDict_Next(next, &pos, &key, &value)) {
 		// get key
 		long i = PyLong_AsLong(value);	
-		if(i == -1 && PyErr_Occured()) {
-			return -1;
-		}
 
 		sbox[i] = safeLongToInt(i);
 
@@ -220,8 +199,9 @@ static PyObject *evaluateWrapper(PyObject *self, PyObject *args) {
 	// Run the evaluate function
 	long result = long(evaluate(input, keys, sbox));
 
-	// Free memory allocated to keys
-	free(keys)
+	// Free memory
+	free(keys);
+	free(sbox);
 
 	// return PyObject containing a int result
 	return PyLong_FromLong(result);
@@ -232,31 +212,28 @@ static PyObject *evaluateWrapper(PyObject *self, PyObject *args) {
 /*
  * Define the C method for use in python
  */
-static PyMethodDef NetworkMethods[] = {
-	{"evaluate", evaluateWrapper, METH_VARARGS,
-	 "Return output from the network.",
-	 {NULL, NULL} /* SENTINEL */
-	}
-}
+static PyMethodDef cNetwork_methods[] = {
+	{"evaluate", (PyCFunction) evaluateWrapper, METH_VARARGS, "Return output from the network."},
+	{NULL, NULL, 0, NULL} /* SENTINEL */
+};
+
+/*
+ * Add a structure that defines the module we want to refer in the Python code
+ */
+static struct PyModuleDef cNetwork_module = {
+	PyModuleDef_HEAD_INIT,
+	"cNetwork",						// module name to use with python import statement
+	"C implementation of the sbox net", 	// module description
+	0,
+	cNetwork_methods					// Structure that defines the methods of the module
+};
 
 
 /*
- * Add and initialize the C modules 
+ * Add a method that Python calls when it loads the module
+ * This must be named PyInit_<module-name>. Where <module-name> matches 
+ * the C++ project's General > Target Name property
  */
-extern void initModules(void) {
-	PyImport_AddModule("cNetwork");
-	Py_InitModule("cNetwork", std_methods);
+PyMODINIT_FUNC PyInit_cNetwork(void) {
+	return PyModule_Create(&cNetwork_module);
 }
-
-
-int main(int argc, char *argv[]) {
-	Py_SetProgramName(argv[0]);
-	
-	Py_Initialize();
-	
-	initModules();
-	
-	Py_Exit(0);
-} 
-
-
