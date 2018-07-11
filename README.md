@@ -18,3 +18,10 @@ $ python setup.py build
 ```
 $ python setup.py build_ext --inplace
 ```
+
+# To Run
+```
+$ python
+>>> import cNetwork
+>>> cNetwork.evaluate((1, [2,1], {0:1, 1:2, 2:3, 3:0}))
+```

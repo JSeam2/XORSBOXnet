@@ -50,10 +50,13 @@ static int evaluate(int input,
  */
 static int safeLongToInt(long toConvert) {
 	int output;
+
 	if(toConvert >= INT_MIN && toConvert <= INT_MAX) {
 		 output = toConvert;
+	} else if (toConvert == 0) {
+		return 0;
 	} else {
-		return NULL;
+		return -1;
 	}
 
 	return output;
@@ -85,6 +88,10 @@ static PyObject *evaluateWrapper(PyObject *self, PyObject *args) {
 	PyObject *obj; 
 	if(!PyArg_ParseTuple(args, "O", &obj)) {
 		// ERROR
+		if(!PyErr_Occurred()){
+			PyErr_SetString(PyExc_TypeError, "Argument is not a valid python object.");
+		}
+
 		return NULL;
 	}
 
@@ -96,6 +103,7 @@ static PyObject *evaluateWrapper(PyObject *self, PyObject *args) {
 	PyObject *iter = PyObject_GetIter(obj);
 	if(!iter){
 		// ERROR object is not an iterator
+		PyErr_SetString(PyExc_TypeError, "Object is not an iterator");
 		return NULL;
 	}
 
@@ -117,8 +125,11 @@ static PyObject *evaluateWrapper(PyObject *self, PyObject *args) {
 	long longInput = PyLong_AsLong(next);
 	int input = safeLongToInt(longInput); 
 
-	if(input == NULL) {
+	if(input == -1) {
 		// We could not safely convert to int
+		if(!PyErr_Occurred()) {
+			PyErr_SetString(PyExc_ValueError, "Unable to convert input to integer.");
+		}
 		return NULL;
 	}
 
@@ -155,10 +166,13 @@ static PyObject *evaluateWrapper(PyObject *self, PyObject *args) {
 	for(int i = 0; i < listSize; i++) {
 		tempPointer = PyList_GetItem(next, i);
 		long longKey = PyLong_AsLong(tempPointer);
-		int intKey = safeLongToInt(longInput);
+		int intKey = safeLongToInt(longKey);
 
-		if(intKey == NULL) {
+		if(intKey == -1) {
 			// ERROR
+			if(!PyErr_Occurred()) {
+				PyErr_SetString(PyExc_ValueError, "Unable to convert list key to integer.");
+			}
 			return NULL;
 		}
 
@@ -188,9 +202,18 @@ static PyObject *evaluateWrapper(PyObject *self, PyObject *args) {
 	Py_ssize_t pos = 0;
 	while(PyDict_Next(next, &pos, &key, &value)) {
 		// get key
-		long i = PyLong_AsLong(value);	
+		long k = PyLong_AsLong(value);	
+		int k_int = safeLongToInt(k);
 
-		sbox[i] = safeLongToInt(i);
+		if(k_int == -1) {
+			// ERROR
+			if(!PyErr_Occurred()) {
+				PyErr_SetString(PyExc_ValueError, "Unable to convert dictionary value to integer.");
+			}
+			return NULL;
+		}
+
+		sbox[i] = k_int;
 
 		i++;
 	}
