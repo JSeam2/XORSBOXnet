@@ -149,8 +149,14 @@ static PyObject *evaluateWrapper(PyObject *self, PyObject *args) {
 	// Get size of list
 	Py_ssize_t listSize = PyList_Size(next);
 
+	/* DEBUG */
+	std::cout << "listSize: " << listSize << std::endl;
+
 	// malloc array to collect values from python list
-	int *keys = (int*)malloc(listSize * sizeof(unsigned int)); 
+	int *keys = (int*)malloc(listSize * sizeof(int)); 
+
+	/* Debug */
+	std::cout << "Size of allocated *keys: " << listSize * sizeof(int) << "\n" << std::endl;
 
 	// Check for Argument errors
 	if(!listSize) {
@@ -163,7 +169,7 @@ static PyObject *evaluateWrapper(PyObject *self, PyObject *args) {
 
 	// extract value from the python list
 	PyObject *tempPointer;
-	for(int i = 0; i < listSize; i++) {
+	for(Py_ssize_t i = 0; i < listSize; i++) {
 		tempPointer = PyList_GetItem(next, i);
 		long longKey = PyLong_AsLong(tempPointer);
 		int intKey = safeLongToInt(longKey);
@@ -176,7 +182,12 @@ static PyObject *evaluateWrapper(PyObject *self, PyObject *args) {
 			return NULL;
 		}
 
-		keys[i] = intKey;
+		std::cout << "Size of intKeys: " << size_of(intKey);
+		std::cout << "\tSize of py i: " << size_of(i);
+		int cast_i = (int) i;
+		std::cout << "\tSize of int i: " << size_of(cast_i) << "\n" << std::endl;
+
+		keys[cast_i] = intKey;
 	}
 
 
@@ -194,18 +205,36 @@ static PyObject *evaluateWrapper(PyObject *self, PyObject *args) {
 
 	// malloc space for sbox array
 	Py_ssize_t dictSize = PyDict_Size(next);
-	int *sbox = (int*) malloc(dictSize * sizeof(unsigned int));
+
+	/* DEBUG */
+	std::cout << "dictSize: " << dictSize << std::endl;
+
+	int *sbox = (int*) malloc(dictSize * sizeof(int));
+
+	/* Debug */
+	std::cout << "Size of allocated *sbox: " << dictSize * sizeof(int) << "\n" << std::endl;
+
 
 	// iterate through dictionary
-	int i = 0;
 	PyObject *key, *value;
 	Py_ssize_t pos = 0;
 	while(PyDict_Next(next, &pos, &key, &value)) {
 		// get key
-		long k = PyLong_AsLong(value);	
-		int k_int = safeLongToInt(k);
+		long keyExtract = PyLong_AsLong(key);
+		long valueExtract = PyLong_AsLong(value);
 
-		if(k_int == -1) {
+		int key_int = safeLongToInt(keyExtract);
+		int value_int = safeLongToInt(valueExtract);
+
+		if(key_int == -1) {
+			// ERROR
+			if(!PyErr_Occurred()) {
+				PyErr_SetString(PyExc_ValueError, "Unable to convert dictionary key to integer.");
+			}
+			return NULL;
+		}
+
+		if(value_int == -1) {
 			// ERROR
 			if(!PyErr_Occurred()) {
 				PyErr_SetString(PyExc_ValueError, "Unable to convert dictionary value to integer.");
@@ -213,14 +242,34 @@ static PyObject *evaluateWrapper(PyObject *self, PyObject *args) {
 			return NULL;
 		}
 
-		sbox[i] = k_int;
+		std::cout << "Size of key_int: " << size_of(key_int) ;
+		std::cout << "\tSize of value_int: " << size_of(value_int) << "\n" << std::endl;
 
-		i++;
+		sbox[key_int] = value_int;
 	}
 
+	/* DEBUG */
+	// input
+	std::cout << "input: " << input << "\n"<< std::endl;
+	
+	// keys
+	std::cout << "size of keys: " << size_of(keys)/size_of(keys[0]) << std::endl;
+	std::cout << "keys: " ;
+	for(int x = 0; x < size_of(keys)/size_of(keys[0]); x++){
+		std::cout << keys[x] << " ";
+	}
+	std::cout << "\n" << std::endl;
+
+	// dict
+	std::cout << "size of sbox: " << size_of(sbox)/size_of(sbox[0]) << std::endl;
+	std::cout << "sbox: " ;
+	for(int x = 0; x < size_of(sbox)/size_of(sbox[0]); x++){
+		std::cout << sbox[x] << " ";
+	}
+	std::cout << "\n" << std::endl;
 
 	// Run the evaluate function
-	long result = long(evaluate(input, keys, sbox));
+	long result = evaluate(input, keys, sbox);
 
 	// Free memory
 	free(keys);
