@@ -1,11 +1,37 @@
 #include <Python.h>
 #include <iostream>
 #include <limits>
-
+#include <vector>
+//#include <cstdint>
 
 
 // Definitions
 # define size_of(type) ((char *)(&type+1)-(char*)(&type)) 
+typedef std::vector<int> IntVector;
+
+
+/*
+ * Helper function
+ * prints out an array
+ */
+// static void printArray(int arr[]) {
+// 	for(int x = 0; x < size_of(arr)/size_of(arr[0]); x++){
+// 		std::cout << arr[x] << " ";
+// 	}
+// 	std::cout << "\n" << std::endl;
+// }
+
+/*
+ * Helper function
+ * prints out a vector
+ */
+static void printVector(IntVector arr) {
+	int size = arr.size();
+    for(int i = 0; i < size; i++) {
+        std::cout << arr[i] << ' ';
+    }
+    std::cout << std::endl;
+}
 
 
 /* 
@@ -18,9 +44,7 @@
  * ::Returns::
  * Int output from the network
  */
-static int evaluate(int input, 
-			 int keys[], 
-			 int sbox[]) {
+static int evaluate(int input, IntVector keys, IntVector sbox) {
 	
 	// accumulator 
 	int out = 0;
@@ -29,7 +53,7 @@ static int evaluate(int input,
 	out += input;
 	
 	// get depth
-	int depth = size_of(keys)/size_of(keys[0]);
+	int depth = keys.size();
 	
 	// loop through depth
 	for(int i = 0; i < depth; i++){
@@ -152,11 +176,7 @@ static PyObject *evaluateWrapper(PyObject *self, PyObject *args) {
 	/* DEBUG */
 	std::cout << "listSize: " << listSize << std::endl;
 
-	// malloc array to collect values from python list
-	int *keys = (int*)malloc(listSize * sizeof(int)); 
-
-	/* Debug */
-	std::cout << "Size of allocated *keys: " << listSize * sizeof(int) << "\n" << std::endl;
+	IntVector keys(listSize);
 
 	// Check for Argument errors
 	if(!listSize) {
@@ -185,9 +205,13 @@ static PyObject *evaluateWrapper(PyObject *self, PyObject *args) {
 		std::cout << "Size of intKeys: " << size_of(intKey);
 		std::cout << "\tSize of py i: " << size_of(i);
 		int cast_i = (int) i;
-		std::cout << "\tSize of int i: " << size_of(cast_i) << "\n" << std::endl;
+		std::cout << " \tSize of int i: " << size_of(cast_i) << "\n" << std::endl;
 
 		keys[cast_i] = intKey;
+
+		/* DEBUG */
+		std::cout << "Keys: ";
+		printVector(keys);
 	}
 
 
@@ -209,7 +233,7 @@ static PyObject *evaluateWrapper(PyObject *self, PyObject *args) {
 	/* DEBUG */
 	std::cout << "dictSize: " << dictSize << std::endl;
 
-	int *sbox = (int*) malloc(dictSize * sizeof(int));
+	IntVector sbox(dictSize);
 
 	/* Debug */
 	std::cout << "Size of allocated *sbox: " << dictSize * sizeof(int) << "\n" << std::endl;
@@ -246,6 +270,9 @@ static PyObject *evaluateWrapper(PyObject *self, PyObject *args) {
 		std::cout << "\tSize of value_int: " << size_of(value_int) << "\n" << std::endl;
 
 		sbox[key_int] = value_int;
+		std::cout << "sbox: " ;
+		/* DEBUG */
+		printVector(sbox);
 	}
 
 	/* DEBUG */
@@ -255,25 +282,15 @@ static PyObject *evaluateWrapper(PyObject *self, PyObject *args) {
 	// keys
 	std::cout << "size of keys: " << size_of(keys)/size_of(keys[0]) << std::endl;
 	std::cout << "keys: " ;
-	for(int x = 0; x < size_of(keys)/size_of(keys[0]); x++){
-		std::cout << keys[x] << " ";
-	}
+	printVector(keys);
 	std::cout << "\n" << std::endl;
 
 	// dict
 	std::cout << "size of sbox: " << size_of(sbox)/size_of(sbox[0]) << std::endl;
 	std::cout << "sbox: " ;
-	for(int x = 0; x < size_of(sbox)/size_of(sbox[0]); x++){
-		std::cout << sbox[x] << " ";
-	}
-	std::cout << "\n" << std::endl;
-
+	printVector(sbox);
 	// Run the evaluate function
 	long result = evaluate(input, keys, sbox);
-
-	// Free memory
-	free(keys);
-	free(sbox);
 
 	// return PyObject containing a int result
 	return PyLong_FromLong(result);

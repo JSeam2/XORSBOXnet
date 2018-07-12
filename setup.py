@@ -1,6 +1,9 @@
 from distutils.core import setup, Extension
 
-cNetwork = Extension('cNetwork', sources=['./cNetwork.cpp'])
+
+cNetwork = Extension('cNetwork', 
+					  sources=['./cNetwork.cpp'], 
+					  )
 
 setup(name='cNetwork',
 	  version='1.0',
