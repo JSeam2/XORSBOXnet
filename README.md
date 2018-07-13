@@ -4,7 +4,7 @@ Simplified implementation of symmetric encryption schemes for security testing.
 # Build instructions
 To build you can do the following.
 
-1. This will install into your python library package
+1. This will install into your python env
 ```
 $ pip install .
 ```
@@ -17,7 +17,12 @@ $ python setup.py build
 3. To build inplace such that the files can be found n the same folder as module.cpp
 ```
 $ python setup.py build_ext --inplace
+
+OR
+
+$ ./setup.sh
 ```
+
 
 # To Run
 ```
