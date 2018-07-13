@@ -25,13 +25,13 @@ typedef std::vector<int> IntVector;
  * Helper function
  * prints out a vector
  */
-static void printVector(IntVector arr) {
-	int size = arr.size();
-    for(int i = 0; i < size; i++) {
-        std::cout << arr[i] << ' ';
-    }
-    std::cout << std::endl;
-}
+// static void printVector(IntVector arr) {
+// 	int size = arr.size();
+//     for(int i = 0; i < size; i++) {
+//         std::cout << arr[i] << ' ';
+//     }
+//     std::cout << std::endl;
+// }
 
 
 /* 
@@ -57,7 +57,7 @@ static int evaluate(int input, IntVector keys, IntVector sbox) {
 	
 	// loop through depth
 	for(int i = 0; i < depth; i++){
-		// XOR
+		// XO	R
 		out ^= keys[i];
 
 		// Pass through SBOX mapping
@@ -174,7 +174,7 @@ static PyObject *evaluateWrapper(PyObject *self, PyObject *args) {
 	Py_ssize_t listSize = PyList_Size(next);
 
 	/* DEBUG */
-	std::cout << "listSize: " << listSize << std::endl;
+	// std::cout << "listSize: " << listSize << std::endl;
 
 	IntVector keys(listSize);
 
@@ -202,16 +202,16 @@ static PyObject *evaluateWrapper(PyObject *self, PyObject *args) {
 			return NULL;
 		}
 
-		std::cout << "Size of intKeys: " << size_of(intKey);
-		std::cout << "\tSize of py i: " << size_of(i);
+		// std::cout << "Size of intKeys: " << size_of(intKey);
+		// std::cout << "\tSize of py i: " << size_of(i);
 		int cast_i = (int) i;
-		std::cout << " \tSize of int i: " << size_of(cast_i) << "\n" << std::endl;
+		// std::cout << " \tSize of int i: " << size_of(cast_i) << "\n" << std::endl;
 
 		keys[cast_i] = intKey;
 
 		/* DEBUG */
-		std::cout << "Keys: ";
-		printVector(keys);
+		// std::cout << "Keys: ";
+		// printVector(keys);
 	}
 
 
@@ -231,12 +231,12 @@ static PyObject *evaluateWrapper(PyObject *self, PyObject *args) {
 	Py_ssize_t dictSize = PyDict_Size(next);
 
 	/* DEBUG */
-	std::cout << "dictSize: " << dictSize << std::endl;
+	// std::cout << "dictSize: " << dictSize << std::endl;
 
 	IntVector sbox(dictSize);
 
 	/* Debug */
-	std::cout << "Size of allocated *sbox: " << dictSize * sizeof(int) << "\n" << std::endl;
+	// std::cout << "Size of allocated *sbox: " << dictSize * sizeof(int) << "\n" << std::endl;
 
 
 	// iterate through dictionary
@@ -266,29 +266,30 @@ static PyObject *evaluateWrapper(PyObject *self, PyObject *args) {
 			return NULL;
 		}
 
-		std::cout << "Size of key_int: " << size_of(key_int) ;
-		std::cout << "\tSize of value_int: " << size_of(value_int) << "\n" << std::endl;
+		// std::cout << "Size of key_int: " << size_of(key_int) ;
+		// std::cout << "\tSize of value_int: " << size_of(value_int) << "\n" << std::endl;
 
 		sbox[key_int] = value_int;
-		std::cout << "sbox: " ;
 		/* DEBUG */
-		printVector(sbox);
+		// std::cout << "sbox: " ;
+		// printVector(sbox);
 	}
 
 	/* DEBUG */
 	// input
-	std::cout << "input: " << input << "\n"<< std::endl;
+	// std::cout << "input: " << input << "\n"<< std::endl;
 	
 	// keys
-	std::cout << "size of keys: " << size_of(keys)/size_of(keys[0]) << std::endl;
-	std::cout << "keys: " ;
-	printVector(keys);
-	std::cout << "\n" << std::endl;
+	// std::cout << "size of keys: " << size_of(keys)/size_of(keys[0]) << std::endl;
+	// std::cout << "keys: " ;
+	// printVector(keys);
+	// std::cout << "\n" << std::endl;
 
 	// dict
-	std::cout << "size of sbox: " << size_of(sbox)/size_of(sbox[0]) << std::endl;
-	std::cout << "sbox: " ;
-	printVector(sbox);
+	// std::cout << "size of sbox: " << size_of(sbox)/size_of(sbox[0]) << std::endl;
+	// std::cout << "sbox: " ;
+	// printVector(sbox);
+
 	// Run the evaluate function
 	long result = evaluate(input, keys, sbox);
 
@@ -302,7 +303,8 @@ static PyObject *evaluateWrapper(PyObject *self, PyObject *args) {
  * Define the C method for use in python
  */
 static PyMethodDef cNetwork_methods[] = {
-	{"evaluate", (PyCFunction) evaluateWrapper, METH_VARARGS, "Return output from the network."},
+	{"evaluate", (PyCFunction) evaluateWrapper, METH_VARARGS, 
+	"Input a tuple (int input, list sbox, dict sbox) to get an output from the network. Make sure dict consists of keys in order from {0: ?, 1: ?, 2:?} "},
 	{NULL, NULL, 0, NULL} /* SENTINEL */
 };
 
@@ -312,7 +314,7 @@ static PyMethodDef cNetwork_methods[] = {
 static struct PyModuleDef cNetwork_module = {
 	PyModuleDef_HEAD_INIT,
 	"cNetwork",						// module name to use with python import statement
-	"C implementation of the sbox net", 	// module description
+	"C implementation of the xor sbox net", 	// module description
 	0,
 	cNetwork_methods					// Structure that defines the methods of the module
 };
