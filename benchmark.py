@@ -9,7 +9,7 @@ sbox = {0:1, 1:2, 2:3, 3:0}
 cTime = []
 pyTime = []
 
-for x in range(100):
+for x in range(10000):
 	print('-----------------------------------')
 	print("C Implementation")
 	start = time.time()
@@ -33,5 +33,10 @@ for x in range(100):
 	pyTime.append(finish_time)
 
 
-print("Average C Time= {}".format(sum(cTime)/len(cTime)))
-print("Average Py Time= {}".format(sum(pyTime)/len(pyTime)))
+cTime = sum(cTime)/len(cTime)
+print("Average C Time= {}".format(cTime))
+pyTime = sum(pyTime)/len(pyTime)
+print("Average Py Time= {}".format(pyTime))
+
+faster = pyTime/cTime
+print("Speed up: {}".format(faster))
